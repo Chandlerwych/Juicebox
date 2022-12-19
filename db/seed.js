@@ -1,5 +1,7 @@
 const {
   // other imports,
+  client,
+  getAllUsers,
   createUser,
 } = require("./index");
 
@@ -11,11 +13,6 @@ async function createInitialUsers() {
     const albert = await createUser({
       username: "albert",
       password: "bertie99",
-    });
-
-    const albertTwo = await createUser({
-      username: "albert",
-      password: "imposter_albert",
     });
 
     console.log(albert);
@@ -32,8 +29,8 @@ async function dropTables() {
     console.log("Starting to drop tables...");
 
     await client.query(`
-        DROP TABLE IF EXISTS users;
-      `);
+      DROP TABLE IF EXISTS users;
+    `);
 
     console.log("Finished dropping tables!");
   } catch (error) {
@@ -47,27 +44,16 @@ async function createTables() {
     console.log("Starting to build tables...");
 
     await client.query(`
-        CREATE TABLE users (
-          id SERIAL PRIMARY KEY,
-          username varchar(255) UNIQUE NOT NULL,
-          password varchar(255) NOT NULL
-        );
-      `);
+      CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        username varchar(255) UNIQUE NOT NULL,
+        password varchar(255) NOT NULL
+      );
+    `);
 
     console.log("Finished building tables!");
   } catch (error) {
     console.error("Error building tables!");
-    throw error;
-  }
-}
-
-async function rebuildDB() {
-  try {
-    client.connect();
-
-    await dropTables();
-    await createTables();
-  } catch (error) {
     throw error;
   }
 }
@@ -97,3 +83,8 @@ async function rebuildDB() {
     throw error;
   }
 }
+
+rebuildDB()
+  .then(testDB)
+  .catch(console.error)
+  .finally(() => client.end());
