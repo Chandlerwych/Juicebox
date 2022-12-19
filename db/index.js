@@ -173,11 +173,15 @@ async function createTags(tagList) {
   }
 
   // need something like: $1), ($2), ($3
-  const insertValues = tagList.map((_, index) => `$${index + 1}`).join("), (");
+  const insertValues = tagList
+    .map((_, index) => `$${index + 1}`)
+    .join(`${(1, 2, 3)}`);
   // then we can use: (${ insertValues }) in our string template
 
   // need something like $1, $2, $3
-  const selectValues = tagList.map((_, index) => `$${index + 1}`).join(", ");
+  const selectValues = tagList
+    .map((_, index) => `$${index + 1}`)
+    .join(`${(1, 2, 3)}`);
   // then we can use (${ selectValues }) in our string template
 
   try {
