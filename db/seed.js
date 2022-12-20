@@ -58,8 +58,9 @@ async function createTables() {
         name VARCHAR(255) UNIQUE NOT NULL
       );
       CREATE TABLE post_tags (
-        postId INTEGER REFERENCES posts(id) UNIQUE,
-        tagId INTEGER REFERENCES tags(id) UNIQUE
+        "postId" INTEGER REFERENCES posts(id),
+        "tagId" INTEGER REFERENCES tags(id),
+        UNIQUE ("postId", "tagId")
       );
     `);
 
@@ -130,29 +131,29 @@ async function createInitialPosts() {
   }
 }
 
-// async function createInitialTags() {
-//   try {
-//     console.log("Starting to create tags...");
+async function createInitialTags() {
+  try {
+    console.log("Starting to create tags...");
 
-//     const [happy, sad, inspo, catman] = await createTags(
-//       "#happy",
-//       "#worst-day-ever",
-//       "#youcandoanything",
-//       "#catmandoeverything"
-//     );
+    const [happy, sad, inspo, catman] = await createTags([
+      "#happy",
+      "#worst-day-ever",
+      "#youcandoanything",
+      "#catmandoeverything",
+    ]);
+    console.log("step 1 complete");
+    const [postOne, postTwo, postThree] = await getAllPosts();
+    console.log("step 2 complete");
+    await addTagsToPost(postOne.id, [happy, inspo]);
+    await addTagsToPost(postTwo.id, [sad, inspo]);
+    await addTagsToPost(postThree.id, [happy, catman, inspo]);
 
-//     const [postOne, postTwo, postThree] = await getAllPosts();
-
-//     await addTagsToPost(postOne.id, [happy, inspo]);
-//     await addTagsToPost(postTwo.id, [sad, inspo]);
-//     await addTagsToPost(postThree.id, [happy, catman, inspo]);
-
-//     console.log("Finished creating tags!");
-//   } catch (error) {
-//     console.log("Error creating tags!");
-//     throw error;
-//   }
-// }
+    console.log("Finished creating tags!");
+  } catch (error) {
+    console.log("Error creating tags!");
+    throw error;
+  }
+}
 
 async function rebuildDB() {
   try {
@@ -162,7 +163,7 @@ async function rebuildDB() {
     await createTables();
     await createInitialUsers();
     await createInitialPosts();
-    // await createInitialTags(); // new
+    await createInitialTags();
   } catch (error) {
     console.log("Error during rebuildDB");
     throw error;
@@ -211,4 +212,4 @@ rebuildDB()
   .catch(console.error)
   .finally(() => client.end());
 
-// module.exports = { createInitialTags };
+module.exports = { createInitialTags };

@@ -1,10 +1,6 @@
 const { Client } = require("pg"); // imports the pg module
-// const { createInitialTags } = require("./seed.js");
+const { createInitialTags } = require("./seed.js");
 const client = new Client("postgres://localhost:5432/juicebox-dev");
-
-/**
- * USER Methods
- */
 
 async function createUser({ username, password, name, location }) {
   try {
@@ -171,20 +167,32 @@ async function createTags(tagList) {
   if (tagList.length === 0) {
     return;
   }
-
+  console.log("taglist", tagList);
   // need something like: $1), ($2), ($3
-  const insertValues = tagList
-    .map((_, index) => `$${index + 1}`)
-    .join(`${(1, 2, 3)}`);
+  const insertValues = tagList.map((_, index) => `$${index + 1}`).join("), (");
   // then we can use: (${ insertValues }) in our string template
-
+  console.log("insertvalue", insertValues);
   // need something like $1, $2, $3
-  const selectValues = tagList
-    .map((_, index) => `$${index + 1}`)
-    .join(`${(1, 2, 3)}`);
+  const selectValues = tagList.map((_, index) => `$${index + 1}`).join(", ");
   // then we can use (${ selectValues }) in our string template
-
+  console.log("selectValue", selectValues);
   try {
+    // select; does pull info assign to variable
+    await client.query(
+      `INSERT INTO tags(name)
+    VALUES (${insertValues}) 
+    ON CONFLICT (name) DO NOTHING `,
+      tagList
+    );
+    // const { rows } = await client.query(`psqlMORE`);
+
+    const { rows } = await client.query(
+      `SELECT * FROM tags
+     WHERE name
+      IN (${selectValues});`,
+      tagList
+    );
+    return rows;
     // insert the tags, doing nothing on conflict
     // returning nothing, we'll query after
     // select all tags where the name is in our taglist
@@ -204,20 +212,6 @@ async function createPostTag(postId, tagId) {
     `,
       [postId, tagId]
     );
-  } catch (error) {
-    throw error;
-  }
-}
-
-async function addTagsToPost(postId, tagList) {
-  try {
-    const createPostTagPromises = tagList.map((tag) =>
-      createPostTag(postId, tag.id)
-    );
-
-    await Promise.all(createPostTagPromises);
-
-    return await getPostById(postId);
   } catch (error) {
     throw error;
   }
@@ -268,6 +262,20 @@ async function getPostById(postId) {
   }
 }
 
+async function addTagsToPost(postId, tagList) {
+  try {
+    const createPostTagPromises = tagList.map((tag) =>
+      createPostTag(postId, tag.id)
+    );
+
+    await Promise.all(createPostTagPromises);
+
+    return await getPostById(postId);
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   client,
   createUser,
@@ -278,9 +286,8 @@ module.exports = {
   updatePost,
   getAllPosts,
   getPostsByUser,
-  createTags,
   createPostTag,
   addTagsToPost,
   getPostById,
-  // createInitialTags,
+  createTags,
 };
